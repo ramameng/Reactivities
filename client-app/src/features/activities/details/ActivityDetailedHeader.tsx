@@ -58,7 +58,7 @@ export default observer(function ActivityDetaledHeader({ activity }: Props) {
                             color={activity.isCancelled ? 'green' : 'red'}
                             floated='left'
                             basic
-                            content={activity.isCancelled ? 'Re-activet Activity' : 'Cancel Activity'}
+                            content={activity.isCancelled ? 'Re-activate Activity' : 'Cancel Activity'}
                             onClick={cancelActivityToggle}
                             loading={loading}
 
