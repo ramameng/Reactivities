@@ -16,8 +16,8 @@ axios.defaults.baseURL = 'http://localhost:5000/api';
 
 axios.interceptors.request.use(config => {
     const token = store.commonStore.token;
-    if(token) config.headers.Authorization = `Bearer ${token}`
-    
+    if (token) config.headers.Authorization = `Bearer ${token}`
+
     return config;
 })
 
@@ -28,7 +28,7 @@ axios.interceptors.response.use(async response => {
     const { data, status, config } = error.response!;
     switch (status) {
         case 400:
-            if(typeof data === 'string') {
+            if (typeof data === 'string') {
                 toast.error(data);
             }
             if (config.method === 'get' && data.errors.hasOwnProperty('id')) {
@@ -79,7 +79,7 @@ const Activities = {
 const Account = {
     currenct: () => requests.get<User>('/account'),
     login: (user: UserFormValues) => requests.post<User>('/account/login', user),
-    register: (user:UserFormValues) => requests.post<User>('/account/register', user)
+    register: (user: UserFormValues) => requests.post<User>('/account/register', user)
 }
 
 const Profiles = {
@@ -88,11 +88,15 @@ const Profiles = {
         let formData = new FormData();
         formData.append('File', file);
         return axios.post('photos', formData, {
-            headers: {'Content-type': 'multipart/form-data'}
+            headers: { 'Content-type': 'multipart/form-data' }
         })
     },
     setMainPhoto: (id: string) => requests.post(`/photos/${id}/setMain`, {}),
-    deletePhoto: (id: string) => requests.del(`/photos/${id}`)
+    deletePhoto: (id: string) => requests.del(`/photos/${id}`),
+    updateProfile: (profile: Partial<Profile>) => requests.put(`/profiles`, profile),
+    updateFollowing: (username: string) => requests.post(`/follow/${username}`, {}),
+    listFollowings: (username: string, predicate: string) =>
+        requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`)
 }
 
 const agent = {
