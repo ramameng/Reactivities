@@ -4,6 +4,7 @@ import { Activity, ActivityFormValues } from "../models/activity";
 import { format } from 'date-fns';
 import { store } from "./store";
 import { Profile } from "../models/profile";
+import { Pagination, PagingParams } from "../models/pagination";
 
 export default class ActivityStore {
     activityRegistry = new Map<string, Activity>();
@@ -11,9 +12,22 @@ export default class ActivityStore {
     editMode = false;
     loading = false;
     loadingInitial = false;
+    pagination: Pagination | null = null;
+    pagingParams = new PagingParams();
 
     constructor() {
         makeAutoObservable(this);
+    }
+
+    setPagingParams = (pagingParams: PagingParams) => {
+        this.pagingParams = pagingParams;
+    }
+
+    get axiosParams() {
+        const params = new URLSearchParams();
+        params.append('pageNumber', this.pagingParams.pageNumber.toString());
+        params.append('pageSize', this.pagingParams.pageSize.toString());
+        return params;
     }
 
     get activitiesByDate() {
@@ -31,23 +45,25 @@ export default class ActivityStore {
         )
     }
 
-    loadActvities = async () => {
+    loadActivities = async () => {
         this.setLoadingInitial(true);
         try {
-            const activities = await agent.Activities.list();
+            const result = await agent.Activities.list(this.axiosParams);
             runInAction(() => {
-                activities.forEach(activity => {
+                result.data.forEach(activity => {
                     this.setActivity(activity);
-                })
-                this.setLoadingInitial(false);
-            })
-
+                });
+            });
+            this.setPagination(result.pagination);
+            this.setLoadingInitial(false);
         } catch (error) {
             console.log(error);
-            runInAction(() => {
-                this.setLoadingInitial(false);
-            })
+            this.setLoadingInitial(false);
         }
+    }
+
+    setPagination = (pagination: Pagination) => {
+        this.pagination = pagination;
     }
 
     loadActivity = async (id: string) => {
@@ -189,7 +205,7 @@ export default class ActivityStore {
     updateAttendeeFollowing = (username: string) => {
         this.activityRegistry.forEach(activity => {
             activity.attendees.forEach(attendee => {
-                if(attendee.username === username) {
+                if (attendee.username === username) {
                     attendee.following ? attendee.followersCount-- : attendee.followersCount++;
                     attendee.following = !attendee.following;
                 }
